@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icone--jogo--eletiva.png" type="image/x-icon">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1c1c1c;
+            color: #fff;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+
+        #start-screen {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            width: 95%;
+            max-width: 1000px;
+            background-color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        #rules {
+            max-width: 350px;
+        }
+
+        #memory-board {
+            display: grid;
+            grid-template-columns: repeat(7, 120px);
+            grid-template-rows: repeat(4, 120px);
+            gap: 15px;
+            margin: auto;
+            display: none;
+        }
+
+        .card {
+            width: 120px;
+            height: 120px;
+            background-color: #292929;
+            /* Cor de fundo dos cartões */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            cursor: pointer;
+            color: #fff;
+            border: 3px solid #fff;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .card:hover {
+            background-color: #3a3a3a;
+            /* Cor de fundo dos cartões ao passar o mouse */
+        }
+
+        #start-button {
+            margin-top: 20px;
+            margin-left: 20px;
+            padding: 25px 50px;
+            /* Aumenta o tamanho do botão */
+            font-size: 22px;
+            cursor: pointer;
+            background-color: #8b0000;
+            /* Cor de fundo do botão */
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        #start-button:hover {
+            background-color: #a10000;
+            /* Cor de fundo do botão ao passar o mouse */
+        }
+
+        #timer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 30px;
+        }
+    </style>
+    <title>EmojiMatch 🧠🔍</title>
+</head>
+
+<body>
+
+    <div id="start-screen">
+        <div id="rules">
+            <h2>Regras:</h2>
+            <p>1. Você terá 5 segundos para memorizar os emojis.</p>
+            <p>2. Não aperte a tecla F5.</p>
+            <p>3. Não aperte sobre as cartas de forma descontrolada. Aguarde as cartas voltarem às suas posições originais.</p>
+        </div>
+        <div>
+            <h1>Bem-vindo ao EmojiMatch 🧠🔍!</h1>
+            <p>Encontre todos os pares no menor tempo possível.</p>
+            <label for="player-name">Nome do Jogador:</label>
+            <input type="text" id="player-name" />
+            <button id="start-button">Iniciar Jogo</button>
+        </div>
+    </div>
+
+    <div id="memory-board"></div>
+    <div id="timer">00:00</div>
+
+    <audio id="background-music" loop>
+        <!-- Inclua aqui o caminho do arquivo de áudio -->
+        <source src="musicafundo.mp3" type="audio/mp3">
+        Seu navegador não suporta o elemento de áudio.
+    </audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const emojis = ['😀', '😎', '🐱', '🌸', '🚀', '🍕', '🎉', '🌈', '🦄', '🍦', '🎸', '🍭', '🍎', '🚲'];
+            let allCards = [];
+            let shuffledCards;
+            let flippedCards = [];
+            let matchedCards = [];
+            let gameStarted = false;
+            let startTime;
+            let timer;
+            let playerName;
+            let playerTimes = [];
+            let backgroundMusic = document.getElementById('background-music');
+
+            const startScreen = document.getElementById('start-screen');
+            const startButton = document.getElementById('start-button');
+            const memoryBoard = document.getElementById('memory-board');
+            const timerDisplay = document.getElementById('timer');
+            const playerNameInput = document.getElementById('player-name');
+
+            startButton.addEventListener('click', function () {
+                if (!gameStarted) {
+                    playerName = playerNameInput.value.trim();
+                    if (!playerName) {
+                        alert('Por favor, insira seu nome antes de iniciar o jogo.');
+                        return;
+                    }
+
+                    if (playerNameExists(playerName)) {
+                        const tryAgain = confirm('Esse nome já foi utilizado. Deseja tentar novamente?');
+                        if (!tryAgain) {
+                            alert(`Ok! O nome "${playerName}" já foi utilizado. Escolha um novo nome.`);
+                            resetGame();
+                            return;
+                        }
+                    }
+
+                    gameStarted = true;
+                    startScreen.style.display = 'none';
+                    memoryBoard.style.display = 'grid';
+
+                    for (let i = 0; i < emojis.length; i++) {
+                        allCards.push(emojis[i], emojis[i]);
+                    }
+
+                    shuffledCards = shuffleArray(allCards);
+
+                    shuffledCards.forEach(function (emoji) {
+                        const card = document.createElement('div');
+                        card.classList.add('card');
+                        card.dataset.emoji = emoji;
+                        card.textContent = '?';
+                        card.addEventListener('click', flipCard);
+                        memoryBoard.appendChild(card);
+                    });
+
+                    setTimeout(() => {
+                        const allCardElements = document.querySelectorAll('.card');
+                        allCardElements.forEach(card => {
+                            card.textContent = card.dataset.emoji;
+                        });
+
+                        setTimeout(() => {
+                            allCardElements.forEach(card => {
+                                card.textContent = '?';
+                            });
+                            startTime = new Date().getTime();
+                            startTimer();
+                            // Inicia a música ao começar o jogo
+                            backgroundMusic.play();
+                        }, 5000);
+                    }, 0);
+                }
+            });
+
+            function flipCard() {
+                const card = this;
+                if (flippedCards.length < 2 && !flippedCards.includes(card)) {
+                    flippedCards.push(card);
+                    card.textContent = card.dataset.emoji;
+
+                    if (flippedCards.length === 2) {
+                        setTimeout(checkMatch, 1000);
+                    }
+                }
+            }
+
+            function checkMatch() {
+                const [card1, card2] = flippedCards;
+                if (card1.dataset.emoji === card2.dataset.emoji) {
+                    matchedCards.push(card1, card2);
+                    if (matchedCards.length === allCards.length) {
+                        const endTime = new Date().getTime();
+                        const elapsedTimeInSeconds = Math.floor((endTime - startTime) / 1000);
+                        alert(`Parabéns, ${playerName}! Você encontrou todos os pares em ${formatTime(elapsedTimeInSeconds)}.`);
+                        gameStarted = false;
+                        startScreen.style.display = 'flex';
+                        memoryBoard.style.display = 'none';
+                        clearInterval(timer);
+                        timerDisplay.textContent = '00:00';
+                        updateRanking(playerName, elapsedTimeInSeconds);
+                        resetGame();
+                    }
+                } else {
+                    card1.textContent = '?';
+                    card2.textContent = '?';
+                }
+
+                flippedCards = [];
+            }
+
+            function startTimer() {
+                timer = setInterval(function () {
+                    const currentTime = new Date().getTime();
+                    const elapsedTimeInSeconds = Math.floor((currentTime - startTime) / 1000);
+                    updateTimerDisplay(elapsedTimeInSeconds);
+                }, 1000);
+            }
+
+            function updateTimerDisplay(elapsedTimeInSeconds) {
+                const minutes = Math.floor(elapsedTimeInSeconds / 60);
+                const seconds = elapsedTimeInSeconds % 60;
+                timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }
+
+            function resetGame() {
+                playerNameInput.value = '';
+                allCards = [];
+                shuffledCards = [];
+                flippedCards = [];
+                matchedCards = [];
+                memoryBoard.innerHTML = '';
+                // Pausa a música ao reiniciar o jogo
+                backgroundMusic.pause();
+                backgroundMusic.currentTime = 0;
+            }
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+            }
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            function playerNameExists(name) {
+                return playerTimes.some(player => player.name === name);
+            }
+
+            function updateRanking(playerName, elapsedTimeInSeconds) {
+                playerTimes.push({
+                    name: playerName,
+                    time: elapsedTimeInSeconds
+                });
+                playerTimes.sort((a, b) => a.time - b.time);
+                console.log('Ranking dos Tempos:');
+                playerTimes.forEach((player, index) => {
+                    console.log(`#${index + 1}: ${player.name} - ${formatTime(player.time)}`);
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>
