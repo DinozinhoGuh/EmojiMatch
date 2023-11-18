@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -63,6 +63,11 @@
         .card:hover {
             background-color: #3a3a3a;
             /* Cor de fundo dos cartões ao passar o mouse */
+        }
+
+        .card.matched {
+            background-color: #00FF00 !important;
+            /* Cor de fundo dos cartões corretos */
         }
 
         #start-button {
@@ -162,14 +167,7 @@
                         return;
                     }
 
-                    if (playerNameExists(playerName)) {
-                        const tryAgain = confirm('Esse nome já foi utilizado. Deseja tentar novamente?');
-                        if (!tryAgain) {
-                            alert(`Ok! O nome "${playerName}" já foi utilizado. Escolha um novo nome.`);
-                            resetGame();
-                            return;
-                        }
-                    }
+                    
 
                     gameStarted = true;
                     startScreen.style.display = 'none';
@@ -225,6 +223,11 @@
                 const [card1, card2] = flippedCards;
                 if (card1.dataset.emoji === card2.dataset.emoji) {
                     matchedCards.push(card1, card2);
+                    card1.style.backgroundColor = '#00FF00';
+                    card2.style.backgroundColor = '#00FF00';
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+
                     if (matchedCards.length === allCards.length) {
                         const endTime = new Date().getTime();
                         const elapsedTimeInSeconds = Math.floor((endTime - startTime) / 1000);
