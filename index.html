@@ -100,7 +100,6 @@
         @media (max-width: 600px) {
             #memory-board {
                 grid-template-columns: repeat(4, 1fr); /* Distribuir em linhas de 4 cartas para telas menores que 500px */
-
                 margin-top: 200px; 
             }
 
@@ -167,7 +166,17 @@
                         return;
                     }
 
-                    
+                    // Check if the player name already exists
+                    if (playerNameExists(playerName)) {
+                        const retry = confirm('Este nome de jogador já existe. Deseja fazer uma nova tentativa?');
+                        if (retry) {
+                            // Reset the game and allow the user to make a new attempt
+                            resetGame();
+                        } else {
+                            // Prompt the user to use a new username
+                            return;
+                        }
+                    }
 
                     gameStarted = true;
                     startScreen.style.display = 'none';
@@ -293,10 +302,19 @@
             }
 
             function updateRanking(playerName, elapsedTimeInSeconds) {
-                playerTimes.push({
-                    name: playerName,
-                    time: elapsedTimeInSeconds
-                });
+                const existingPlayerIndex = playerTimes.findIndex(player => player.name === playerName);
+
+                if (existingPlayerIndex !== -1) {
+                    // Player with the same name already exists, update the time
+                    playerTimes[existingPlayerIndex].time = Math.min(playerTimes[existingPlayerIndex].time, elapsedTimeInSeconds);
+                } else {
+                    // Player with this name doesn't exist, add a new entry
+                    playerTimes.push({
+                        name: playerName,
+                        time: elapsedTimeInSeconds
+                    });
+                }
+
                 playerTimes.sort((a, b) => a.time - b.time);
                 console.log('Ranking dos Tempos:');
                 playerTimes.forEach((player, index) => {
