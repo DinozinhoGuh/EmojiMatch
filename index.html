@@ -300,28 +300,44 @@
             function playerNameExists(name) {
                 return playerTimes.some(player => player.name === name);
             }
-
             function updateRanking(playerName, elapsedTimeInSeconds) {
-                const existingPlayerIndex = playerTimes.findIndex(player => player.name === playerName);
+        const existingPlayerIndex = playerTimes.findIndex(player => player.name === playerName);
 
-                if (existingPlayerIndex !== -1) {
-                    // Player with the same name already exists, update the time
-                    playerTimes[existingPlayerIndex].time = Math.min(playerTimes[existingPlayerIndex].time, elapsedTimeInSeconds);
-                } else {
-                    // Player with this name doesn't exist, add a new entry
-                    playerTimes.push({
-                        name: playerName,
-                        time: elapsedTimeInSeconds
-                    });
-                }
+        if (existingPlayerIndex !== -1) {
+            // Player with the same name already exists, update the time
+            playerTimes[existingPlayerIndex].time = Math.min(playerTimes[existingPlayerIndex].time, elapsedTimeInSeconds);
+        } else {
+            // Player with this name doesn't exist, add a new entry
+            playerTimes.push({
+                name: playerName,
+                time: elapsedTimeInSeconds
+            });
+        }
 
-                playerTimes.sort((a, b) => a.time - b.time);
-                console.log('Ranking dos Tempos:');
-                playerTimes.forEach((player, index) => {
-                    console.log(`#${index + 1}: ${player.name} - ${formatTime(player.time)}`);
-                });
-            }
+        playerTimes.sort((a, b) => a.time - b.time);
+
+        // Limpar o console log antes de imprimir os novos resultados
+        console.clear();
+
+        console.log('Ranking dos Tempos:');
+        playerTimes.forEach((player, index) => {
+            console.log(`#${index + 1}: ${player.name} - ${formatTime(player.time)}`);
         });
+
+        function loadLocalData() {
+            const storedPlayerTimes = localStorage.getItem('playerTimes');
+            if (storedPlayerTimes) {
+                playerTimes = JSON.parse(storedPlayerTimes);
+                console.log('Dados do jogador carregados do armazenamento local.');
+            }
+        }
+    }
+
+    }
+                
+                
+    );
+        
     </script>
 
 </body>
