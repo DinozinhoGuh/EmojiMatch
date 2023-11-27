@@ -97,6 +97,21 @@
             font-size: 30px;
         }
 
+        #ranking {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 600px;
+        }
+
+        #ranking-content {
+            overflow-y: auto;
+            max-height: 200px;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 600px) {
             #memory-board {
                 grid-template-columns: repeat(4, 1fr); /* Distribuir em linhas de 4 cartas para telas menores que 500px */
@@ -138,6 +153,11 @@
         Seu navegador não suporta o elemento de áudio.
     </audio>
 
+    <div id="ranking">
+        <h2>Ranking dos Tempos:</h2>
+        <div id="ranking-content"></div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const emojis = ['😀', '😎', '🐱', '🌸', '🚀', '🍕', '🎉', '🌈', '🦄', '🍦', '🎸', '🍭', '🍎', '🚲'];
@@ -157,6 +177,7 @@
             const memoryBoard = document.getElementById('memory-board');
             const timerDisplay = document.getElementById('timer');
             const playerNameInput = document.getElementById('player-name');
+            const rankingContent = document.getElementById('ranking-content');
 
             startButton.addEventListener('click', function () {
                 if (!gameStarted) {
@@ -300,44 +321,56 @@
             function playerNameExists(name) {
                 return playerTimes.some(player => player.name === name);
             }
+
             function updateRanking(playerName, elapsedTimeInSeconds) {
-        const existingPlayerIndex = playerTimes.findIndex(player => player.name === playerName);
+                const existingPlayerIndex = playerTimes.findIndex(player => player.name === playerName);
 
-        if (existingPlayerIndex !== -1) {
-            // Player with the same name already exists, update the time
-            playerTimes[existingPlayerIndex].time = Math.min(playerTimes[existingPlayerIndex].time, elapsedTimeInSeconds);
-        } else {
-            // Player with this name doesn't exist, add a new entry
-            playerTimes.push({
-                name: playerName,
-                time: elapsedTimeInSeconds
-            });
-        }
+                if (existingPlayerIndex !== -1) {
+                    // Player with the same name already exists, update the time
+                    playerTimes[existingPlayerIndex].time = Math.min(playerTimes[existingPlayerIndex].time, elapsedTimeInSeconds);
+                } else {
+                    // Player with this name doesn't exist, add a new entry
+                    playerTimes.push({
+                        name: playerName,
+                        time: elapsedTimeInSeconds
+                    });
+                }
 
-        playerTimes.sort((a, b) => a.time - b.time);
+                playerTimes.sort((a, b) => a.time - b.time);
 
-        // Limpar o console log antes de imprimir os novos resultados
-        console.clear();
+                // Limpar o console log antes de imprimir os novos resultados
+                console.clear();
 
-        console.log('Ranking dos Tempos:');
-        playerTimes.forEach((player, index) => {
-            console.log(`#${index + 1}: ${player.name} - ${formatTime(player.time)}`);
-        });
+                console.log('Ranking dos Tempos:');
+                playerTimes.forEach((player, index) => {
+                    console.log(`#${index + 1}: ${player.name} - ${formatTime(player.time)}`);
+                });
 
-        function loadLocalData() {
-            const storedPlayerTimes = localStorage.getItem('playerTimes');
-            if (storedPlayerTimes) {
-                playerTimes = JSON.parse(storedPlayerTimes);
-                console.log('Dados do jogador carregados do armazenamento local.');
+                // Atualizar a seção de ranking na tela do jogador
+                updateRankingDisplay();
             }
-        }
-    }
 
-    }
-                
-                
-    );
-        
+            function updateRankingDisplay() {
+                // Limpar o conteúdo anterior
+                rankingContent.innerHTML = '';
+
+                // Adicionar os novos resultados ao conteúdo
+                playerTimes.forEach((player, index) => {
+                    const playerRankingEntry = document.createElement('div');
+                    playerRankingEntry.textContent = `#${index + 1}: ${player.name} - ${formatTime(player.time)}`;
+                    rankingContent.appendChild(playerRankingEntry);
+                });
+            }
+
+            function loadLocalData() {
+                const storedPlayerTimes = localStorage.getItem('playerTimes');
+                if (storedPlayerTimes) {
+                    playerTimes = JSON.parse(storedPlayerTimes);
+                    console.log('Dados do jogador carregados do armazenamento local.');
+                }
+            }
+
+        });
     </script>
 
 </body>
